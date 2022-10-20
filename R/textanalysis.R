@@ -5,8 +5,6 @@
 
 # Aplicar remoções e substituições ----------------------------------------
 
-teste <- registros_completos
-
 # Aplicando remoções de palavras selecionadas
 
 lista_de_remocao <- 
@@ -38,8 +36,8 @@ lista_de_remocao <-
     "considerações finais"
   )
 
-teste$conteudo <- 
-  teste$conteudo |> 
+registros_completos$conteudo <- 
+  registros_completos$conteudo |> 
   aplicar_remocoes(lista_de_remocao)
 
 # Padronização de entidades
@@ -101,14 +99,14 @@ lista_de_substituicoes <-
     "PRONAF PRONAF" = "PRONAF"
   )
 
-teste$conteudo <- 
-  teste$conteudo |> 
+registros_completos$conteudo <- 
+  registros_completos$conteudo |> 
   aplicar_substituicoes(lista_de_substituicoes)
 
 # Criando o corpus de conteúdos -------------------------------------------
 
 corpus_conteudo <- 
-  corpus(teste$conteudo)
+  corpus(registros_completos$conteudo)
 
 # Adicionado variáveis
 

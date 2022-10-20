@@ -1,7 +1,10 @@
 ---
 title: "Análise das publicações da Empresa Brasileira de Pesquisa Agropecuária (EMBRAPA)"
+author: "Autor: Marcelo Chaves de Jesus"
+date: "Publicado em `r format(Sys.time(), '%d/%m/%Y')`"
 output: 
   bookdown::html_document2: 
+    theme: paper
     toc: yes
     number_sections: yes
 documentclass: book
@@ -21,12 +24,12 @@ source("R/packages.R")
 source("R/functions.R")
 ```
 
-```{r sources, include=FALSE}
+```{r sources, cache=TRUE, include=FALSE}
 source("R/tables.R")
 source("R/graphics.R")
 source("R/textanalysis.R")
-# source("R/socialneworkanalysis.R")
 ```
+> O presente relatório foi elaborado no intuito de demonstrar a aplicação das técnicas de *Web Scraping* aprendidas durante a edição 09/2020 do curso realizado pela [curso-r](https://curso-r.com/). O objetivo foi obter e analisar dados de publicações da Embrapa.
 
 # Apresentação
 
@@ -55,33 +58,33 @@ A Base de Dados da Pesquisa Agropecuária (BDPA) é formada pelos acervos das bi
 ```{r tela1, fig.cap="Página inicial"}
 knitr::include_graphics('img/tela1.png')
 ```
-
 A BDPA apresenta os metadados das publicações que a integram, além do acesso ao texto integral de parte relevante desse conjunto. Utiliza o *software Ainfo Consulta*, um dos componentes do sistema *Ainfo 6*, desenvolvido em parceria entre a equipe de tecnologia da informação da [Embrapa Agricultura Digital](https://www.embrapa.br/agricultura-digital), a Comissão Permanente para o Ainfo, o Grupo de Trabalho de Referenciação Bibliográfica e o Sistema Embrapa de Bibliotecas.
 
 ```{r tela2, fig.cap="Página de resultados de busca"}
 knitr::include_graphics('img/tela2.png')
 ```
-
 Como visto na imagem anterior, a ferramenta de busca da base de dados apresenta opções para busca por meio de palavras-chaves (1), impressão e *download* de listagens de publicações em formato resumido (2) e visualização de informações detalhadas sobre cada publicação, como autoria, ano de publicação, tópicos abordados, dentre outros dados (3). A impressão e o *download* das listagens de publicações é limitada a 2000 documentos por vez. Por outro lado, a visualização das informações deve ser feita documento por documento por meio dos *links* representados pelos ícones ao lado de cada item.
 
 ```{r tela3, fig.cap= "Modelo de ficha de registro completo"}
 knitr::include_graphics('img/tela3.png')
 ```
-
 O *site* disponibiliza metadados para cada documento indexado no sistema de bibliotecas, por meio dos quais é possível realizar as análises quantitativas como o volume de publicações: o longo dos anos; por tipo de publicação; por categoria e tipo de mídia (material), como também as análises qualitativas como os termos mais frequentes, os produtos, os temas e a localização geográfica onde as pesquisas foram realizadas.
 
 ## Coleta dos dados
 
 Em virtude do volume de documentos e da forma como são disponibilizados na base de dados, a coleta e consolidação dos dados manualmente seria inviável. Sendo assim, a estratégia de coleta de dados adotada contou com a técnica de *Web Scraping* que consistem na coleta a partir de *softwares* que simulam as requisições que seriam realizadas no acesso manual. Sendo assim, construí os *scripts* em linguem R [@rcoreteam2021] organizando todo o processo de coleta, análise descritiva e análise textual conforme apresentado a seguir.
 
+### Pacotes e recursos
+
+Embora existam diversas ferramentas que podem ser utilizadas para *Web Scraping*, optei por utilizar os pacotes [httr](https://httr.r-lib.org/index.html) [@httr] para a realização das requisições necessárias para o acesso às páginas e o gerenciamento das sessões, [rvest](https://rvest.tidyverse.org/) [@rvest] para extração de tabelas, [xml2](https://xml2.r-lib.org/) [@xml2] para parseamento das páginas, além dos pacotes do [tidyverse](https://www.tidyverse.org/) [@tidyverse] para manipulação dos dados. Uma vez criado o banco de dados, recorri aos pacotes [quanteda](https://quanteda.io/index.html) [@quanteda], [textmineR](https://www.rtextminer.com/) [@textmineR], [text2vec](https://text2vec.org/) [@text2vec], [stringi](https://stringi.gagolewski.com/) [@stringi], [proxyC](https://github.com/koheiw/proxyC) [@proxyC] e [LDAvis](https://github.com/cpsievert/LDAvis) [@LDAvis] para a análise textual. Os *scripts* contendo todos os detalhes do projeto podem ser encontrados [aqui](https://github.com/profmarcelojesus/embrapa.git).
+
 ### Etapas do processo de coleta
 
 O processo de *Web Scraping* se inicia com a identificação dos dados de interesse. Em seguida é necessário navegar até as páginas e estudar sua estrutura, observar como os dados estão dispostos, além de aspectos inerentes à construção do *site* e acesso às informações. A partir daí é necessário reproduzir por meio de pacotes e *scripts* as etapas de replicação (realização das requisições necessárias para acesso e *download* dos dados), parseamento (limpeza e extração das informações relevantes) e validação. Uma vez elaborados e testados os *scripts* e assegurando-se de que as informações podem ser obtidas como desejado, segue-se a etapa de iteração onde se realizam as operações de reprodução quantas vezes forem necessárias para a obtenção de todos os dados de interesse.
 
-```{r figciclows, fig.cap='Ciclo de Web Scraping', fig.align='center'}
+```{r figciclows, fig.cap='Ciclo de Web Scraping'}
 knitr::include_graphics('img/ciclows.png')
 ```
-
 Para este estudo, as seguintes etapas principais foram percorridas:
 
 -   Busca e navegação nos *sites* da EMBRAPA para identificar a localização das publicações.
@@ -95,9 +98,60 @@ Para este estudo, as seguintes etapas principais foram percorridas:
 -   Elaboração de gráficos e tabelas.
 -   Interpretação dos resultados.
 
-### Pacotes e recursos
+### Descrição das etapas de Web Scraping
 
-Embora existam diversas ferramentas que podem ser utilizadas para *Web Scraping*, optei por utilizar os pacotes [httr](https://httr.r-lib.org/index.html) [@httr] para a realização das requisições necessárias para o acesso às páginas e o gerenciamento das sessões, [rvest](https://rvest.tidyverse.org/) [@rvest] para extração de tabelas, [xml2](https://xml2.r-lib.org/) [@xml2] para parseamento das páginas, além dos pacotes do [tidyverse](https://www.tidyverse.org/) [@tidyverse] para manipulação dos dados. Uma vez criado o banco de dados, recorri aos pacotes [quanteda](https://quanteda.io/index.html) [@quanteda], [textmineR](https://www.rtextminer.com/) [@textmineR], [text2vec](https://text2vec.org/) [@text2vec], [stringi](https://stringi.gagolewski.com/) [@stringi], [proxyC](https://github.com/koheiw/proxyC) [@proxyC] e [LDAvis](https://github.com/cpsievert/LDAvis) [@LDAvis] para a análise textual. Os *scripts* contendo todos os detalhes do projeto podem ser encontrados [aqui](https://github.com/profmarcelojesus/embrapa.git).
+Para executando manualmente a busca na base, inseri a expressão de busca (1) "agricultura familiar", sem aspas selecionando 100 registros por página (2) para exibição dos resultados. 
+
+```{r tela5, fig.cap='Critérios iniciais de busca'}
+knitr::include_graphics('img/tela5.png')
+```
+Ao clicar em buscar (3), verifiquei que a página chama a função busca que realiza uma instrução do tipo POST para a url https://www.bdpa.cnptia.embrapa.br/consulta/busca (\@ref(fig:tela6)) passando como parâmetros o tipo de busca (simples e avançada) e três conjuntos field~n~ + value~n~ além das informações sobre a ordem, número de registros por página e outras opções que poderiam ser passadas pelo formulário de busca avançada (\@ref(fig:tela7)).
+
+```{r tela6, fig.cap='Requisição POST'}
+knitr::include_graphics('img/tela6.png')
+```
+```{r tela7, fig.cap='Parâmetros da requisição POST'}
+knitr::include_graphics('img/tela7.png')
+```
+Os resultados da busca são apresentados conforma a (\@ref(fig:tela2)). Para acessar a página que contém as informações sobre o registro deve-se clicar na lupa ao lado do cabeçalho do registro. O clique na lupa chama novamente a função busca, mas deste vez passando uma instrução do tipo GET e como parâmetros a id do resgistro o página atual do registro (\@ref(fig:tela8)).
+
+```{r tela8, fig.cap='Requisição GET com id do registro'}
+knitr::include_graphics('img/tela8.png')
+```
+Observando a estrutura da página verifiquei que os resultados são apresentados em uma tabela em que cada registro apresenta o *link* para *Visualizar de detralhes do registro* no parâmetro *href*. 
+
+```{r tela9, fig.cap='Elemento html contendo o *link* para detalhes do registro'}
+knitr::include_graphics('img/tela9.png')
+```
+Como se observa, os resultados são paginados sendo necessário percorrer todas as paginas para se obter a lista completa de *links* para detalhes dos registros. Desta forma foram criadas as funções `buscar_paginas` que recebe como parâmetro o número da página a ser lida, chama a função `pegar_links` que obtem a lista de *links* dos registros de cada página e na sequência faz o *download* de cada página de detalhes do registro por meio da função `baixar_registro`. Após serem baixados todos os registros repete-se o processo na próxima página de resultados.
+
+Uma vez que todas as páginas de detalhes dos registros foram baixadas realizei o processo de parseamente para extração das informações relevantes. Para isso criei a função `ler_registros` que obtém o elemento `td` contendo a classe `colunaRegistro`
+
+```{r tela10, fig.cap='Elemento *td* contendo a classe *colunaRegistro*'}
+knitr::include_graphics('img/tela10.png')
+```
+
+O processo de leitura das página gerou a tabela `registros`, uma tibble com `r nrow(registros)` observações e  `r ncol(registros)` variáveis.
+
+```{r headregistros}
+head(registros)
+```
+A função `ler_formatos` foi utilizada para copiar as informações sobre os exemplares disponíveis para cada registro. Essa informação encontrava-se em outra tabela logo abaixo dos detalhes (\@ref(fig:tela11)). 
+
+```{r tela11, fig.cap='Tabela de exemplares disponíveis'}
+knitr::include_graphics('img/tela11.png')
+```
+
+Verifiquei que a tabela poderia ser obtida por meio da classe `registroCompletoExemplar` (\@ref(fig:tela12)).
+
+```{r tela12, fig.cap='Elemento elemento *tr* contendo a classe *registroCompletoExemplar*'}
+knitr::include_graphics('img/tela12.png')
+```
+Os informações foram guardadas na tabela `formatos`, uma tibble com `r nrow(formatos)` observações e  `r ncol(formatos)` variáveis, indexada pela `id` do registro. Durante as análises esta tabela e demais informações foram anexadas à tabela `registros` para obtenção de informações quantitativas.
+
+```{r headformatos}
+head(formatos)
+```
 
 ## Resumo dos dados coletados
 
@@ -107,13 +161,11 @@ ano_inicial <-
   filter(ano_de_publicacao > 0) |> 
   summarise(ano_de_publicacao = min(ano_de_publicacao))
 ```
-
 Foram encontradas 8487 publicações relacionadas ao termo *Agricultura Familiar* na base de dados. Existem documentos publicados desde o ano de `r ano_inicial$ano_de_publicacao` como se pode observar no gráfico a seguir.
 
 ```{r plotdocumentosporano, fig.width=10, fig.cap="Volume de Publicações por Ano"}
 ggplotly(plot_documentos_por_ano)
 ```
-
 É possível notar um crescimento das publicações a partir da década de 1990 que parece ter se mantido até o final dos anos 2010. Considerando-se todo o período posterior, percebe-se uma tendência de queda, embora os anos de 2015 e 2016 tenham apresentado picos no número de publicações. É importante frisar que estão sendo considerados apenas os resultados relacionados com a *Agricultura Familiar*, de modo que o gráfico não representa o volume total de publicações da EMBRAPA no período. Pode-se inferir que a evolução do gráfico indica um aumento na representatividade do tema, seguido por uma recente diminuição. Contudo, não é possível concluir sem que sejam analisados os demais documentos.
 
 ```{r ndocs}
@@ -123,7 +175,6 @@ ndocs <-
   count(tipo_da_producao_cientifica) |> 
   filter(n == max(n))
 ```
-
 Considerando que o maior volume de publicações é observado a partir de 1990, optei por analisar apenas as publicações posteriores a essa data para melhor visualização dos resultados. Conforme se verifica no gráfico a seguir, as públicações disponíveis na biblioteca da EMBRAPA estão classificadas em 19 *tipos de produção científica*. O maior volume de documentos concentra-se em *`r ndocs$tipo_da_producao_cientifica`* com `r ndocs$n` publicações.
 
 ```{r plotdocumentosportipo, fig.width=10, fig.cap="Volume de Publicações por Tipo de Produção Científica"}
@@ -135,21 +186,18 @@ As públicações da EMBRAPA são classificadas também de acordo com o *tipo de
 ```{r plotdocumentosporanoformato, fig.width=10, fig.cap="Volume Anual de Publicações por Tipo de Material"}
 ggplotly(plot_documentos_por_ano_formato)
 ```
-
 Da mesma forma, pode-se verificar a evolução das publicações por *tipo de produção científica* ao longo dos anos. É possível observar que as públicações aumentam em diversidade de tipos com o passar do tempo, o que pode indicar um esforço da empresa para atingir o público-alvo de maneira mais efetiva e adequada a necessidades de comunicação específicas. Além de materiais genuinamente científicos como *teses*, *artigos* e *livros*, outros materiais foram produzidos como *folhetos*, *manuais* e *vídeos,* dentre outros recursos audiovisuais.
 
 ```{r plotdocumentosporanotipo, fig.width=10, fig.cap="Volume Anual de Publicações por Tipo de Publicação"}
 ggplotly(plot_documentos_por_ano_tipo)
 ```
-
 Verificou-se em 2004 um pico no volume de folhetos que foi seguido por um declínio constante até o final do período. Entre os anos de 2004 e 2016, observa-se também um aumento no volume de filmes e gravações de som. Isso indica que a empresa deve ter buscado como estratégia de comunicação meios audiovisuais em outros meios de comunicação.
 
 A base de dados fornece ainda informações sobre os assuntos relacionados com as publicações. Ao todo os documentos são classificados em 18 *categorias*, como se observa no gráfico a seguir. Embora o maior volume seja de publicações não classificadas em nenhum assunto específico, é possível notar que a temática (B) *sociologia rural* vem ganhando espaço entre as publicações, chegando a 106 documentos em 2020.
 
 ```{r plotdocumentosporcategoria, fig.cap="Volume Anual de Publicações por Categoria do Assunto"}
-ggplotly(plot_documentos_por_categoria) # |> layout(showlegend = FALSE)
+ggplotly(plot_documentos_por_categoria)
 ```
-
 Outros temas também apresentam evolução similar como (A) *sistemas de cultivo*, (P) *recursos naturais, ciências ambientais e da terra*, (E) *economia e indústria agrícola*, (F) *plantas e produtos de origem vegetal*, (K) *ciência florestal e produtos de origem vegetal* e (L) *ciência animal e seus produtos*. Um destaque interessante se dá para publicações sobre (G) *melhoramento genético* que atingiu um pico em 2004 (65 documentos) e após esta data vem ocilando entre 1 e 6 publicações catalogadas.
 
 # Análise lexical
@@ -161,7 +209,6 @@ Para as análises textuais, o *corpus* foi formado inicialmente a partir do camp
 ```{r tela4, fig.cap='Campo conteúdo dos registros', fig.align='center'}
 knitr::include_graphics('img/tela4.png')
 ```
-
 O objetivo dessa análise foi identificar padrões e tendências nos termos utilizados. Para tanto, busquei verificar as palavras ou expressões mais frequentes, a coocorrência entre os termos, assim como as diferenças entre grupos como, por exemplo, entre documentos digitais e outros tipos de formato e entre categorias.
 
 A tabela a seguir apresenta a estrutura dos dados após a filtragem. Foram acrescentadas as variáveis `Ano`, `Idioma` e outra variável para indicar se o documento possui *link* para acesso *online*. Nessa etapa foram analisados os conteúdos de 5671 registros cujo campo *conteúdo* não estava vazio.
@@ -255,7 +302,6 @@ DT::datatable(t[,-c(3:4)],
   )
 
 ```
-
 A expressão composta mais frequente nos documentos além dos termos de busca é *sistema [de] produção*, considerando-se que a preposição "de" foi excluída. Na sequência, a *reforma agrária* vêm como a segunda temática mais frequente seguida por *políticas públicas*, *desenvolvimento rural*, *meio ambiente*, *recuros naturais* e *segurança alimentar*, dentre outros temas sensíveis, tanto para o setor da *Agricultura Familiar* como para a sociedade em geral. Essas colocações foram utilizadas para formar novas expressões compostas a serem analisadas em relação aos demais termos do *corpus*.
 
 ## Nuvem de palavras
@@ -265,7 +311,6 @@ Partindo para a análise das diferenças entre tipos, a nuvem de palavras a segu
 ```{r wordcloud, fig.height=8, fig.cap="Palavras mais frequentes por tipo de acesso"}
 plotar_word_cloud(min_termfreq = 0, max_words = 2500, min_size = 0.4, max_size = 4)
 ```
-
 A interpretação das palavras deve considerar sua representatividade no grupo. Por exemplo, o termo *programa* é mais representativo paro o grupo de discos (*CD-ROM/DVD/Videodiscos* do que para os demais grupos. Isso compreensível devido ao fato de que neste grupo os documentos se referem em grande parte a exibições em programas e TV. Já os termos *agricultura*, *desenvolvimento*, *agricultura familiar* e *reforma agrária* são mais representativos para no grupo de *fitas magnéticas/videocassete/microfilmes e outros*. Importante ressaltar que este grupo contempla também os documentos sem informação sobre o tipo de midia. Enquanto isso, os termos *Embrapa* e *objetivo* são mais importantes para o grupo de *documentos digitais*, enquanto termos como *pesquisa*, *amazônia* e *nordeste* são mais importantes no grupo dos *materiais impressos*.
 
 Cada palavra poderia ser analisada quanto ao grupo para o qual ela é representativa. Embora seja um exercício interessante, a núvem de palavras por tipo de material possui pouco conteúdo informacional. De qualquer forma, o método de análise pode servir para obter informações sobre outros tipos de agrupamentos e outros conjuntos de textos.
@@ -283,7 +328,6 @@ ggplot(data = freq_online, aes(x = nrow(freq_online):1, y = frequency)) +
                      labels = freq_online$feature) +
   labs(x = NULL, y = "Frequência relativa")
 ```
-
 De modo geral, percebe-se uma ênfase produtivista nas publicações. Trata-se de modelo técnico, econômico e social de produção agropecuária apresentado como capaz de proporcionar novas possibilidades para a geração de renda e aumento de capital. Nesse modelo de agricultura, a produção agrícola se tornou refém de um referencial mundial, sendo influenciada pelas mesmas regras que regem os demais aspectos da produção econômica. Esse fato contrasta em certa medida com os princípios que norteiam as políticas voltadas para agricultura familiar no Brasil como produção agroecológica e sustentabilidade [@dallabrida2016].
 
 ## Complexidade dos textos
@@ -327,5 +371,14 @@ plotar_net_thesagro(min_termfreq = 150)
 A representação gráfica das ligações entre as palavras mais frequentes pode demonstrar associações e o distanciamanento entre termos e tópicos. As palavras principais encontram-se no centro da rede indicando seu papel de ligação e de contexto. É possível perceber que o *core* do *corpus* analisado é formado pelas ideias de *produção* e *desenvolvimento sustentável*. Esse último conceito surge em proximidade com os termos *pesquisa* e *tecnologia*. Isso revela um aspecto não demonstrado pelas técnicas de *bag of words* aplicadas até agora. Da mesma forma, a localização e as ligações das palavras mais periféricas pode gerar novos *insights*.
 
 Os resultados deste levantamento podem contribuir para iniciar uma discussão sobre o vocabulário empregado na comunicação entre a EMBRAPA e seu público, discussão esta que poderia ser aprofundada por meio da análise de conteúdo das publicações, coleta de dados em outras plataformas como as redes sociais e uma avaliação da repercussão dessa comunicação nas mídia. De qualquer forma, já foi possível tocar a superfície das publicações da EMBRAPA analisadas em conjunto e extrair *insigths* interessantes. Por outro lado, o conjunto de dados obtidos possibilita outras visões a respeito da comunicão da entidade, sobretudo, no que se refere á sua presença *online*, ou seja, sua interação com o público por meio da *internet*.
+
+<center>
+
+<img src="https://avatars.githubusercontent.com/u/91786217?v=5" alt="" width="200"/>
+
+Marcelo Chaves de Jesus  
+[github.com/profmarcelojesus](https://github.com/profmarcelojesus)
+</center>
+
 
 # Referências

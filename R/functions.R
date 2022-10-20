@@ -55,7 +55,10 @@ baixar_registro <- function(link){
 # função para baixar todas as páginas de resultados -----------------------
 
 baixar_paginas <- function(n_pagina){
-  if(n_pagina > 1) { pagina <- buscar_proxima_pagina(n_pagina, termo_de_busca) }
+  if(n_pagina > 1) { 
+    pagina <- 
+      buscar_proxima_pagina(n_pagina, termo_de_busca) 
+    }
   # pegar links para arquivos
   links <- pegar_links(pagina |> content())
   # baixar registros da primeira página
